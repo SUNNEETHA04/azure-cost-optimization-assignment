@@ -1,14 +1,22 @@
 # cosmosdb.tf
+# Create Azure Cosmos DB account, database and container for recent billing records
 
+# Generate a random suffix to make resource names unique
+resource "random_integer" "suffix" {
+  min = 1000
+  max = 9999
+}
+
+# Cosmos DB Account
 resource "azurerm_cosmosdb_account" "cosmos" {
-  name                = "costoptcosmosdb${random_integer.suffix.result}"
+  name                = "costoptcosmosdb${random_integer.suffix.result}" # Unique name with suffix
   location            = azurerm_resource_group.rg.location
   resource_group_name = azurerm_resource_group.rg.name
   offer_type          = "Standard"
-  kind                = "GlobalDocumentDB"
+  kind                = "GlobalDocumentDB"  # Cosmos DB API for Core (SQL)
 
   consistency_policy {
-    consistency_level = "Session"
+    consistency_level = "Session"  # Balanced performance and consistency
   }
 
   geo_location {
@@ -17,22 +25,19 @@ resource "azurerm_cosmosdb_account" "cosmos" {
   }
 }
 
-resource "random_integer" "suffix" {
-  min = 1000
-  max = 9999
-}
-
+# Cosmos DB SQL Database for billing records
 resource "azurerm_cosmosdb_sql_database" "db" {
   name                = "billingdb"
   resource_group_name = azurerm_resource_group.rg.name
   account_name        = azurerm_cosmosdb_account.cosmos.name
 }
 
+# Cosmos DB SQL Container to store billing records
 resource "azurerm_cosmosdb_sql_container" "container" {
   name                = "billingrecords"
   resource_group_name = azurerm_resource_group.rg.name
   account_name        = azurerm_cosmosdb_account.cosmos.name
   database_name       = azurerm_cosmosdb_sql_database.db.name
-  partition_key_path  = "/partitionKey"
-  throughput          = 400
+  partition_key_path  = "/partitionKey"  # Partition key for scaling
+  throughput          = 400              # Provisioned throughput (RU/s)
 }
