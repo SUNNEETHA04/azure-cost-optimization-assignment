@@ -132,6 +132,10 @@ Log success/failure for auditing
 > Regularly check the Azure Function App logs in the Azure Portal to monitor for any failures or errors during archival.  
 > Consider setting up Azure Monitor alerts or Application Insights alerts to get notified proactively if the function fails or encounters issues.
 
+## 📊 Monitoring & Alerts
+
+It is recommended to enable **Application Insights** for the Function App to monitor execution logs, failures, and performance metrics. Alerts can be configured based on failure counts, execution time anomalies, or other custom metrics to proactively notify you of potential issues.
+
 ### Step 4: Verify Archival
 
 1. Check that billing records older than 3 months have been archived to Blob Storage.
