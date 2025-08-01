@@ -39,18 +39,38 @@ Before you begin, ensure you have the following:
 
 ---
 
+---
+
+## 🏗️ Architecture Diagram
+
+The following diagram illustrates the high-level design of the archival and restore solution using Azure services:
+
+![Architecture Diagram](assets/architecture.png)
+
+### 🔄 Flow Overview
+
+- **Cosmos DB** stores the primary data.
+- **Azure Function App** is triggered (time-based or event-based) to archive data from Cosmos DB.
+- **Blob Storage** is used to store archived data in JSON format.
+- Another **Azure Function** or ADF pipeline can be used to **restore** data back to Cosmos DB if needed.
+- Monitoring and automation (e.g., Azure Monitor, Runbooks) can be configured optionally.
+
+---
+
+
 ## 🧱 Project Structure
 
 📁 azure-cost-optimization-assignment/  
-├── main.tf         # Azure provider setup and Resource Group creation  
-├── storage.tf      # Azure Storage Account and Blob Container configuration  
-├── cosmosdb.tf     # Azure Cosmos DB provisioning for billing records  
-├── functionapp.tf  # Azure Function App infrastructure deployment  
-├── README.md       # Project documentation and instructions  
-└── 📁 archive-function/  
-    ├── archive-billing.ps1  # PowerShell script to archive Cosmos DB records to Blob Storage  
-    └── function.json       # Timer trigger schedule configuration for the Azure Function  
-
+├── main.tf             # Azure provider setup and Resource Group creation  
+├── storage.tf          # Azure Storage Account and Blob Container configuration  
+├── cosmosdb.tf         # Azure Cosmos DB provisioning for billing records  
+├── functionapp.tf      # Azure Function App infrastructure deployment  
+├── README.md           # Project documentation and instructions  
+├── 📁 archive-function/  
+│   ├── archive-billing.ps1  # PowerShell script to archive Cosmos DB records to Blob Storage  
+│   └── function.json        # Timer trigger schedule configuration for the Azure Function  
+└── 📁 assets/  
+    └── architecture.png     # High-level architecture diagram of the solution
 ---
 
 ## 🚀 How to Use
