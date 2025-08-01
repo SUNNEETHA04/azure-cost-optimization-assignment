@@ -62,6 +62,7 @@ The following diagram illustrates the high-level design of the archival and rest
 
 ## 🧱 Project Structure
 
+```
 📁 azure-cost-optimization-assignment/
 ├── 📄 main.tf               # Azure provider setup and Resource Group creation
 ├── 📄 storage.tf            # Azure Storage Account and Blob Container configuration
@@ -73,6 +74,7 @@ The following diagram illustrates the high-level design of the archival and rest
 │   └── 📄 function.json         # Timer trigger schedule configuration for the Azure Function
 └── 📁 assets/
     └── 📄 architecture.png      # High-level architecture diagram of the solution
+```
 
 ---
 
