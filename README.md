@@ -1,5 +1,9 @@
 # 💼 Azure Cost Optimization: Archive Billing Data from Cosmos DB to Blob Storage
 
+[![Terraform](https://img.shields.io/badge/Terraform-v1.5.7-blue.svg)](#)
+[![PowerShell](https://img.shields.io/badge/PowerShell-Automation-blue.svg)](#)
+[![Azure](https://img.shields.io/badge/Azure-Cloud-blue.svg)](#)
+
 This project automates the archival of billing data from **Azure Cosmos DB** to **Azure Blob Storage** using an **Azure Function App** scheduled via a timer trigger. All resources are deployed using **Terraform**.
 
 ---
@@ -39,8 +43,6 @@ Before you begin, ensure you have the following:
 
 ---
 
----
-
 ## 🏗️ Architecture Diagram
 
 The following diagram illustrates the high-level design of the archival and restore solution using Azure services:
@@ -60,58 +62,82 @@ The following diagram illustrates the high-level design of the archival and rest
 
 ## 🧱 Project Structure
 
-📁 azure-cost-optimization-assignment/  
-├── main.tf             # Azure provider setup and Resource Group creation  
-├── storage.tf          # Azure Storage Account and Blob Container configuration  
-├── cosmosdb.tf         # Azure Cosmos DB provisioning for billing records  
-├── functionapp.tf      # Azure Function App infrastructure deployment  
-├── README.md           # Project documentation and instructions  
-├── 📁 archive-function/  
-│   ├── archive-billing.ps1  # PowerShell script to archive Cosmos DB records to Blob Storage  
-│   └── function.json        # Timer trigger schedule configuration for the Azure Function  
-└── 📁 assets/  
-    └── architecture.png     # High-level architecture diagram of the solution
+📁 azure-cost-optimization-assignment/
+├── main.tf             # Azure provider setup and Resource Group creation
+├── storage.tf          # Azure Storage Account and Blob Container configuration
+├── cosmosdb.tf         # Azure Cosmos DB provisioning for billing records
+├── functionapp.tf      # Azure Function App infrastructure deployment
+├── README.md           # Project documentation and instructions
+├── 📁 archive-function/
+│   ├── archive-billing.ps1 # PowerShell script to archive Cosmos DB records to Blob Storage
+│   └── function.json       # Timer trigger schedule configuration for the Azure Function
+└── 📁 assets/
+    └── architecture.png    # High-level architecture diagram of the solution
+---
+
+## 💡 Function Logic – Pseudocode Summary
+
+```powershell
+Every 24 hours (via timer trigger):
+  Connect to Cosmos DB using connection string (from App Settings)
+  Query for billing records older than 3 months
+  For each record:
+    Convert to JSON format
+    Upload as a blob to Azure Blob Storage (into the archive container)
+    If upload is successful:
+      Delete the record from Cosmos DB
+    If upload fails:
+      Retry upload or log failure for manual review  
+Log success/failure for auditing
+```
+
+* The logic is implemented in `archive-billing.ps1` and triggered by `function.json`.
+* Designed for cost reduction by archiving cold data to cheaper Blob storage.
+
 ---
 
 ## 🚀 How to Use
 
 ### Step 1: Deploy Infrastructure
 
-1. Open your terminal and navigate to the project root directory.  
-2. Run `terraform init` to initialize Terraform.  
-3. Run `terraform plan` to review planned changes.  
-4. Run `terraform apply` to apply changes and create resources.  
-5. Confirm with `yes` when prompted.  
+1. Open your terminal and navigate to the project root directory.
+2. Run `terraform init` to initialize Terraform.
+3. Run `terraform plan` to review planned changes.
+4. Run `terraform apply` to apply changes and create resources.
+5. Confirm with `yes` when prompted.
 
 ### Step 2: Deploy Azure Function Code
 
-1. In Azure Portal, go to your Function App → Functions → select your function → Code + Test tab.  
-2. Upload or replace these files:  
-   - `archive-billing.ps1`  
-   - `function.json`  
-3. Navigate to the Configuration tab in your Function App.  
-4. Add a new Application Setting:  
-   - **Key:** `CosmosDBConnection`  
-   - **Value:** Your Cosmos DB connection string (from Azure Portal)  
+1. In Azure Portal, go to your Function App → Functions → select your function → Code + Test tab.
+2. Upload or replace these files:
+   - `archive-billing.ps1`
+   - `function.json`
+3. Navigate to the Configuration tab in your Function App.
+4. Add a new Application Setting:
+   - **Key:** `CosmosDBConnection`
+   - **Value:** Your Cosmos DB connection string (from Azure Portal)
      > *Find Cosmos DB connection string under Azure Portal → Your Cosmos DB → Keys*
 
 > **Security Tip:** Do **not** hardcode connection strings inside your PowerShell script.
 
 ### Step 3: Monitor & Schedule
 
-1. The Azure Function runs automatically every 24 hours, controlled by `function.json`.  
-2. Modify the schedule by editing the CRON expression in `function.json`.  
-3. Monitor function executions and logs in Azure Portal under Monitoring or Application Insights.  
+1. The Azure Function runs automatically every 24 hours, controlled by `function.json`.
+2. Modify the schedule by editing the CRON expression in `function.json`.
+3. Monitor function executions and logs in Azure Portal under Monitoring or Application Insights.
+> **Note:**  
+> Regularly check the Azure Function App logs in the Azure Portal to monitor for any failures or errors during archival.  
+> Consider setting up Azure Monitor alerts or Application Insights alerts to get notified proactively if the function fails or encounters issues.
 
 ### Step 4: Verify Archival
 
-1. Check that billing records older than 3 months have been archived to Blob Storage.  
-2. Confirm these records are deleted from Cosmos DB.  
-3. Review Function App logs for errors or warnings.  
+1. Check that billing records older than 3 months have been archived to Blob Storage.
+2. Confirm these records are deleted from Cosmos DB.
+3. Review Function App logs for errors or warnings.
 
 ---
 
-## Cleanup
+## 🧹 Cleanup
 
 - To avoid ongoing charges, destroy all created Azure resources using:
 
@@ -145,7 +171,7 @@ terraform destroy
 
 ## 👩‍💼 Author
 
-Sai Suneetha
+**Sai Suneetha**
 
 Azure DevOps Engineer
 
