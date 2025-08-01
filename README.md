@@ -8,6 +8,21 @@ This project automates the archival of billing data from **Azure Cosmos DB** to 
 
 ---
 
+## 👩‍💼 Project Summary
+
+This solution provisions Azure infrastructure using Terraform to create a Cosmos DB, Storage Account, and Azure Function App running PowerShell scripts. The Azure Function archives Cosmos DB billing records older than 3 months to Blob Storage and deletes them from Cosmos DB to optimize costs.
+
+Key highlights include:
+
+- **Infrastructure as Code (IaC)** with Terraform for consistent resource provisioning.  
+- **Secure secret management** by passing Cosmos DB primary key as a sensitive Terraform variable (`variables.tf`).  
+- **PowerShell-based Azure Function** implementing retry logic and error handling.  
+- **Timer-triggered automation** configurable via CRON expression.  
+- Cost savings achieved by offloading cold data from Cosmos DB to cheaper Blob Storage.  
+- Clear separation of concerns and modular project structure.
+
+---
+
 ## 🛠️ Prerequisites
 
 Before you begin, ensure you have the following:
@@ -59,7 +74,6 @@ The following diagram illustrates the high-level design of the archival and rest
 
 ---
 
-
 ## 🧱 Project Structure
 
 ```
@@ -68,6 +82,7 @@ The following diagram illustrates the high-level design of the archival and rest
 ├── 📄 storage.tf            # Azure Storage Account and Blob Container configuration
 ├── 📄 cosmosdb.tf           # Azure Cosmos DB provisioning for billing records
 ├── 📄 functionapp.tf        # Azure Function App infrastructure deployment
+├── 📄 variables.tf          # Terraform variable for Cosmos DB primary key (sensitive)
 ├── 📄 README.md             # Project documentation and instructions
 ├── 📁 archive-function/
 │   ├── 📄 archive-billing.ps1  # PowerShell script to archive Cosmos DB records to Blob Storage
@@ -86,16 +101,42 @@ Every 24 hours (via timer trigger):
   Query for billing records older than 3 months
   For each record:
     Convert to JSON format
-    Upload as a blob to Azure Blob Storage (into the archive container)
+    Try to upload as a blob to Azure Blob Storage (into the archive container)
     If upload is successful:
       Delete the record from Cosmos DB
-    If upload fails:
-      Retry upload or log failure for manual review  
-Log success/failure for auditing
+    Else:
+      Retry upload a set number of times
+      If still failing after retries:
+        Log failure for manual review
+Log overall success/failure for auditing
 ```
 
 * The logic is implemented in `archive-billing.ps1` and triggered by `function.json`.
 * Designed for cost reduction by archiving cold data to cheaper Blob storage.
+
+---
+
+## 🔐 Managing Secrets and Configuration
+
+Sensitive information such as Cosmos DB primary key is handled securely using Terraform variables defined in `variables.tf`:
+
+```hcl
+variable "cosmosdb_primary_key" {
+  description = "The primary key for accessing Cosmos DB"
+  type        = string
+  sensitive   = true
+}
+```
+
+During deployment, provide the primary key via CLI or environment variables without hardcoding secrets in the code:
+
+```bash
+terraform apply -var "cosmosdb_primary_key=YOUR_COSMOS_DB_PRIMARY_KEY"
+```
+
+- Secrets are passed as application settings to the Azure Function App to be accessed as environment variables inside the PowerShell script.
+
+- Consider using Azure Managed Identities and Azure Key Vault for production scenarios to eliminate direct secret handling.
 
 ---
 
@@ -141,6 +182,37 @@ It is recommended to enable **Application Insights** for the Function App to mon
 1. Check that billing records older than 3 months have been archived to Blob Storage.
 2. Confirm these records are deleted from Cosmos DB.
 3. Review Function App logs for errors or warnings.
+
+---
+
+## 🔔 Azure Function Timer Trigger Configuration
+The archival process runs automatically based on a **Timer Trigger** configured in the `function.json` file inside the Azure Function App’s code directory.
+
+- The `function.json` contains a CRON expression which defines the schedule (e.g., daily).
+
+- You can customize the timer schedule by editing this CRON expression directly.
+
+- Optionally, you can set the schedule dynamically using an **App Setting** by referencing it within `function.json` like this:
+
+```json
+"schedule": "%ScheduleAppSetting%"
+```
+
+- For manual or ad hoc executions, the function can be triggered via the Azure Portal or by invoking it through HTTP API with proper authorization.
+
+> *You can also manually trigger the Azure Function directly from the Azure Portal or by sending an authenticated HTTP POST request to the function URL. This is useful for testing or running the archive process on demand outside the normal schedule.*
+
+### Additional Details and References
+
+- [Microsoft docs on timer trigger](https://learn.microsoft.com/en-us/azure/azure-functions/functions-bindings-timer) – Official documentation on configuring and using timer triggers in Azure Functions.
+- [Manual triggering approach](https://kumarashwinhubert.com/azure-timer-function-how-to-force-immediate-execution-with-manual-triggering) – Guide on how to manually trigger Azure timer functions for testing or immediate execution.
+
+---
+
+## 🧪 Testing and Validation
+
+Due to the lack of an active Azure subscription, this solution has been developed and reviewed based on best practices, architecture principles, and local environment testing (where applicable).  
+Full end-to-end deployment and execution testing on Azure infrastructure is pending and will be completed once subscription access is available.
 
 ---
 

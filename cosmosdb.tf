@@ -1,12 +1,6 @@
 # cosmosdb.tf
 # Create Azure Cosmos DB account, database and container for recent billing records
 
-# Generate a random suffix to make resource names unique
-resource "random_integer" "suffix" {
-  min = 1000
-  max = 9999
-}
-
 # Cosmos DB Account
 resource "azurerm_cosmosdb_account" "cosmos" {
   name                = "costoptcosmosdb${random_integer.suffix.result}" # Unique name with suffix
